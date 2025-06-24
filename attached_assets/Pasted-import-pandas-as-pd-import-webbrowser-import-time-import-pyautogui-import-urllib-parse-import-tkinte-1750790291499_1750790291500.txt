@@ -1,0 +1,96 @@
+import pandas as pd
+import webbrowser
+import time
+import pyautogui
+import urllib.parse
+import tkinter as tk
+from tkinter import filedialog, simpledialog, messagebox
+
+# Step 1: Data Loading (Awareness & Consideration)
+def load_data():
+    file_path = filedialog.askopenfilename(
+        title="Select CSV or Excel file",
+        filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx *.xls")]
+    )
+    if not file_path:
+        return None
+    if file_path.endswith('.csv'):
+        df = pd.read_csv(file_path)
+    else:
+        df = pd.read_excel(file_path)
+    return df
+
+# Step 2: User Message Input (Decision & Engagement)
+def input_message():
+    msg = simpledialog.askstring("Mensaje Personalizado", "Ingresa tu mensaje (usa {name} para personalizar):")
+    if msg:
+        return msg
+    else:
+        messagebox.showinfo("Aviso", "No se ingresó ningún mensaje.")
+        return None
+
+# Step 3: Sending Messages (Action & Loyalty)
+def send_messages(df, message_template):
+    # Assumes 'name' and 'phone' columns are present
+    for index, row in df.iterrows():
+        name = row['name']
+        phone = str(row['phone'])
+        message = message_template.format(name=name)
+        print(f"📨 Enviando a {name}...")
+
+        # Build WhatsApp Web URL
+        phone_encoded = urllib.parse.quote(phone)
+        message_encoded = urllib.parse.quote(message)
+        url = f"https://web.whatsapp.com/send?phone={phone_encoded}&text={message_encoded}"
+
+        # Open WhatsApp Web chat
+        webbrowser.open_new_tab(url)
+        time.sleep(15)  # Adjust as necessary for load time
+
+        # Send message with pyautogui
+        pyautogui.press("enter")
+        time.sleep(5)  # Pause before next message
+
+    messagebox.showinfo("Envío Completo", "Todos los mensajes han sido enviados.")
+
+# GUI Layout
+def main():
+    root = tk.Tk()
+    root.title("Automatizador de mensajes WhatsApp")
+
+    df = None
+    message_template = ""
+
+    def load_and_prepare():
+        nonlocal df
+        df = load_data()
+        if df is not None:
+            messagebox.showinfo("Datos Cargados", f"{len(df)} registros cargados.")
+
+    def input_msg():
+        nonlocal message_template
+        msg = input_message()
+        if msg:
+            message_template = msg
+
+    def start_sending():
+        if df is None:
+            messagebox.showerror("Error", "Por favor, carga los datos primero.")
+            return
+        if not message_template:
+            messagebox.showerror("Error", "Por favor, ingresa un mensaje personalizado.")
+            return
+        send_messages(df, message_template)
+
+    btn_load = tk.Button(root, text="Cargar datos (CSV/Excel)", command=load_and_prepare)
+    btn_message = tk.Button(root, text="Ingresar mensaje", command=input_msg)
+    btn_send = tk.Button(root, text="Enviar mensajes", command=start_sending)
+
+    btn_load.pack(pady=10)
+    btn_message.pack(pady=10)
+    btn_send.pack(pady=10)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
