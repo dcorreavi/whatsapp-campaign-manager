@@ -6,11 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ✅ Healthcheck route for Railway
-app.get("/", (_req, res) => {
-  res.status(200).send("OK");
-});
-
 // Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -44,6 +39,11 @@ app.use((req, res, next) => {
 
 // ✅ Register routes (ensure it doesn't return a server object)
 registerRoutes(app);
+
+// ✅ Healthcheck route for Railway - place it here to ensure it's not overridden
+app.get("/", (_req, res) => {
+  res.status(200).send("OK");
+});
 
 // ✅ Error handler (must go after routes)
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
